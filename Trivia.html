@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JEOPARDY!</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Oswald:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --jblue: #060CE9;
+    --jblue-dark: #03068A;
+    --jblue-light: #1A23FF;
+    --jgold: #FFD700;
+    --jgold-dark: #C8A800;
+    --jwhite: #FFFFFF;
+    --jred: #CC0000;
+    --shadow-deep: 0 8px 32px rgba(0,0,0,0.6);
+    --shadow-card: 0 4px 16px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #000510;
+    font-family: 'Oswald', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(6,12,233,0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(255,215,0,0.05) 0%, transparent 40%);
+  }
+
+  /* ---- HEADER ---- */
+  #header {
+    text-align: center;
+    padding: 24px 20px 12px;
+    position: relative;
+  }
+  #header::before {
+    content: '';
+    display: block;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--jgold), var(--jgold), transparent);
+    margin-bottom: 16px;
+  }
+  .logo {
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(56px, 10vw, 100px);
+    letter-spacing: 8px;
+    background: linear-gradient(180deg, #FFE566 0%, #FFD700 40%, #C8A800 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 4px 12px rgba(255,215,0,0.4));
+    line-height: 1;
+  }
+  .logo span {
+    background: linear-gradient(180deg, #ffffff 0%, #e0e0e0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .tagline {
+    font-family: 'Libre Baskerville', serif;
+    font-style: italic;
+    color: rgba(255,215,0,0.7);
+    font-size: 14px;
+    letter-spacing: 3px;
+    margin-top: 4px;
+  }
+
+  /* ---- SCOREBOARD ---- */
+  #scoreboard {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding: 16px 20px;
+    background: linear-gradient(180deg, rgba(6,12,233,0.3), rgba(6,12,233,0.1));
+    border-top: 1px solid rgba(255,215,0,0.3);
+    border-bottom: 1px solid rgba(255,215,0,0.3);
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .score-item {
+    text-align: center;
+  }
+  .score-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: rgba(255,215,0,0.6);
+    text-transform: uppercase;
+  }
+  .score-value {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 36px;
+    color: var(--jgold);
+    letter-spacing: 2px;
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(255,215,0,0.5);
+  }
+  .score-value.negative { color: #ff4444; text-shadow: 0 0 20px rgba(255,68,68,0.5); }
+  #reset-btn {
+    background: transparent;
+    border: 1px solid rgba(255,215,0,0.4);
+    color: rgba(255,215,0,0.7);
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 6px 16px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    align-self: center;
+  }
+  #reset-btn:hover {
+    border-color: var(--jgold);
+    color: var(--jgold);
+    background: rgba(255,215,0,0.1);
+  }
+
+  /* ---- BOARD ---- */
+  #board-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 12px 40px;
+  }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    width: 100%;
+  }
+
+  /* Category headers */
+  .cat-header {
+    background: linear-gradient(180deg, var(--jblue-light), var(--jblue-dark));
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    padding: 16px 8px;
+    text-align: center;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(11px, 1.4vw, 16px);
+    color: var(--jwhite);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+    box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.15);
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.3;
+  }
+
+  /* Clue cells */
+  .clue-cell {
+    background: linear-gradient(180deg, #0A18D4, #060CE9, #03068A);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .clue-cell::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .clue-cell:hover:not(.used) {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 36px rgba(6,12,233,0.6), 0 0 0 2px var(--jgold);
+    filter: brightness(1.15);
+    z-index: 2;
+  }
+  .clue-cell.used {
+    background: #030720;
+    border-color: rgba(255,255,255,0.04);
+    cursor: default;
+    opacity: 0.35;
+  }
+  .clue-cell.used .dollar-amount { visibility: hidden; }
+  .dollar-amount {
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(22px, 3.5vw, 42px);
+    background: linear-gradient(180deg, #FFE566 0%, #FFD700 50%, #B8900A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 1px;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+    text-align: center;
+    line-height: 1;
+  }
+
+  /* ---- MODAL ---- */
+  #modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,5,0.88);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  }
+  #modal-overlay.active { display: flex; }
+  #modal {
+    background: linear-gradient(160deg, #070FC0, #050A9E, #030680);
+    border: 3px solid var(--jgold);
+    border-radius: 8px;
+    max-width: 700px;
+    width: 100%;
+    box-shadow: 0 0 80px rgba(6,12,233,0.8), 0 0 30px rgba(255,215,0,0.3);
+    overflow: hidden;
+    animation: modalIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes modalIn {
+    from { transform: scale(0.7) translateY(40px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  #modal-header {
+    background: linear-gradient(90deg, var(--jgold-dark), var(--jgold), var(--jgold-dark));
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #modal-category {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #1a0a00;
+  }
+  #modal-value {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 28px;
+    color: #1a0a00;
+    letter-spacing: 1px;
+  }
+  #modal-body { padding: 40px 40px 32px; }
+  #clue-text {
+    font-family: 'Libre Baskerville', serif;
+    font-size: clamp(18px, 2.5vw, 26px);
+    color: #ffffff;
+    text-align: center;
+    line-height: 1.6;
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #answer-area { margin-top: 32px; }
+  #answer-reveal {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 6px;
+    padding: 20px;
+    text-align: center;
+    display: none;
+  }
+  #answer-reveal.shown { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  #answer-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: rgba(255,215,0,0.5);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  #answer-text {
+    font-family: 'Libre Baskerville', serif;
+    font-style: italic;
+    font-size: clamp(16px, 2vw, 22px);
+    color: var(--jgold);
+    font-weight: 700;
+  }
+  #modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 28px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 12px 28px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  #btn-reveal {
+    background: linear-gradient(180deg, #FFE566, #FFD700);
+    color: #1a0a00;
+  }
+  #btn-reveal:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  #btn-correct {
+    background: linear-gradient(180deg, #00cc66, #009944);
+    color: white;
+    display: none;
+  }
+  #btn-correct.shown { display: inline-block; }
+  #btn-correct:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  #btn-wrong {
+    background: linear-gradient(180deg, #cc2200, #991a00);
+    color: white;
+    display: none;
+  }
+  #btn-wrong.shown { display: inline-block; }
+  #btn-wrong:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  #btn-close {
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  #btn-close:hover { color: white; border-color: white; }
+
+  /* ---- FINAL / WIN SCREEN ---- */
+  #win-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,5,0.95);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+  #win-overlay.active { display: flex; animation: fadeIn 0.8s ease; }
+  .win-title {
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(48px, 10vw, 96px);
+    background: linear-gradient(180deg, #FFE566, #FFD700, #C8A800);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 8px;
+    margin-bottom: 16px;
+  }
+  .win-score {
+    font-family: 'Oswald', sans-serif;
+    font-size: clamp(24px, 4vw, 48px);
+    color: white;
+    margin-bottom: 32px;
+  }
+  .win-score span { color: var(--jgold); }
+
+  /* ---- DECORATIVE ---- */
+  #board::before { display: none; }
+  
+  /* Separator line between header row and clues */
+  .cat-header { position: relative; }
+
+  @media (max-width: 600px) {
+    .clue-cell { min-height: 60px; }
+    .cat-header { min-height: 60px; font-size: 10px; padding: 10px 4px; }
+    #modal-body { padding: 24px 20px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="logo">J<span>!</span>EOPARDY</div>
+  <div class="tagline">Texas Takeover Edition &mdash; Breckenridge 2026</div>
+</div>
+
+<div id="scoreboard">
+  <div class="score-item">
+    <div class="score-label">Score</div>
+    <div class="score-value" id="score-display">$0</div>
+  </div>
+  <div class="score-item">
+    <div class="score-label">Correct</div>
+    <div class="score-value" id="correct-display">0</div>
+  </div>
+  <div class="score-item">
+    <div class="score-label">Questions Left</div>
+    <div class="score-value" id="remaining-display">25</div>
+  </div>
+  <button id="reset-btn" onclick="resetGame()">↺ New Game</button>
+</div>
+
+<div id="board-wrap">
+  <div id="board"></div>
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay">
+  <div id="modal">
+    <div id="modal-header">
+      <div id="modal-category">Category</div>
+      <div id="modal-value">$100</div>
+    </div>
+    <div id="modal-body">
+      <div id="clue-text"></div>
+      <div id="answer-area">
+        <div id="answer-reveal">
+          <div id="answer-label">The Correct Response Is...</div>
+          <div id="answer-text"></div>
+        </div>
+        <div id="modal-actions">
+          <button class="btn" id="btn-reveal" onclick="revealAnswer()">Reveal Answer</button>
+          <button class="btn" id="btn-correct" onclick="markResult(true)">✓ Got It</button>
+          <button class="btn" id="btn-wrong" onclick="markResult(false)">✗ Missed It</button>
+          <button class="btn" id="btn-close" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Win screen -->
+<div id="win-overlay" id="win-screen">
+  <div class="win-title">Game Over!</div>
+  <div class="win-score">Final Score: <span id="final-score">$0</span></div>
+  <button class="btn" id="btn-reveal" style="font-size:16px;padding:16px 40px;" onclick="resetGame()">Play Again</button>
+</div>
+
+<script>
+const CATEGORIES = [
+  "Winter Olympics",
+  "U.S. Rocky Mountains",
+  "State of New Mexico",
+  "Panhandle of Texas",
+  "Breckenridge, CO"
+];
+
+const VALUES = [100, 200, 300, 400, 500];
+
+// All 25 clues: [category_index][value_index] = { clue, answer }
+const CLUES = {
+  "Winter Olympics": {
+    100: { clue: "This country has won the most total gold medals in Winter Olympics history, dominating events like speed skating and cross-country skiing.", answer: "What is Norway?" },
+    200: { clue: "The Winter Olympics were last held in this Asian country in 2022, where temperatures plunged and snowmaking machines ran nonstop.", answer: "What is China? (Beijing)" },
+    300: { clue: "This freestyle skiing discipline, introduced at the 1992 Albertville Games, has athletes performing tricks off two large jumps.", answer: "What is aerials?" },
+    400: { clue: "American Mikaela Shiffrin holds the record for most World Cup victories in alpine skiing, competing in events like slalom, giant slalom, and this discipline where speed and turns combine.", answer: "What is super-G (Super Giant Slalom)?" },
+    500: { clue: "At the 1980 Winter Olympics in Lake Placid, the U.S. men's hockey team stunned the heavily favored Soviet Union in a game forever known by this two-word nickname.", answer: "What is the Miracle on Ice?" }
+  },
+  "U.S. Rocky Mountains": {
+    100: "This state, nicknamed the Centennial State, contains more of the Rocky Mountains than any other U.S. state and has 58 peaks above 14,000 feet.|What is Colorado?",
+    200: "The Continental Divide runs through the Rockies, separating rivers that flow to the Pacific from rivers that flow to this ocean on the east side.|What is the Atlantic Ocean?",
+    300: "This iconic mountain in Colorado, standing at 14,115 feet, inspired Katharine Lee Bates to write 'America the Beautiful' from its summit in 1893.|What is Pikes Peak?",
+    400: "Rocky Mountain National Park in Colorado is one of the highest national parks in the U.S., and this high-altitude road crossing its crest reaches over 12,000 feet, making it one of the highest paved roads in North America.|What is Trail Ridge Road?",
+    500: "This ancient geologic formation of red sandstone fins and arches in Colorado is named for its resemblance to a spine — and lies at the base of the Rockies near Grand Junction.|What is Colorado National Monument (or Dinosaur National Monument)?"
+  },
+  "State of New Mexico": {
+    100: "New Mexico is nicknamed 'The Land of Enchantment' and this city is its largest, home to the famous Albuquerque International Balloon Fiesta.|What is Albuquerque?",
+    200: "This city is New Mexico's capital, the oldest capital city in the United States, and is known for its Palace of the Governors on the historic plaza.|What is Santa Fe?",
+    300: "In July 1945, the world's first nuclear bomb was detonated at a test site in New Mexico with the code name Trinity, located in this desert area.|What is the White Sands Missile Range (Jornada del Muerto desert)?",
+    400: "New Mexico is the top producer in the U.S. of this spicy green pepper that is roasted and sold throughout the state each fall, famously associated with the city of Hatch.|What is the Hatch green chile (Hatch chile pepper)?",
+    500: "This large underground cave system in southeastern New Mexico, a UNESCO World Heritage Site, contains the world's largest known cave chamber — the Big Room.|What is Carlsbad Caverns?"
+  },
+  "Panhandle of Texas": {
+    100: "This city is the largest in the Texas Panhandle and serves as the region's economic and cultural hub, home to Palo Duro Canyon State Park.|What is Amarillo?",
+    200: "Called the 'Grand Canyon of Texas,' this stunning canyon near Amarillo is the second largest canyon in the United States.|What is Palo Duro Canyon?",
+    300: "The Texas Panhandle sits in the southern portion of this vast, flat, semi-arid grassland region that stretches from Texas through Nebraska.|What is the Great Plains (or High Plains)?",
+    400: "This famous roadside art installation in Amarillo features ten Cadillacs buried nose-first in the ground, created by the art group Ant Farm in 1974.|What is Cadillac Ranch?",
+    500: "The Texas Panhandle overlies a large portion of this massive underground aquifer, one of the world's largest, which supplies water to agriculture across eight states.|What is the Ogallala Aquifer (High Plains Aquifer)?"
+  },
+  "Breckenridge, CO": {
+    100: "Breckenridge is located in this Colorado county, known for its high-altitude towns and ski resorts, with its county seat also named Breckenridge.|What is Summit County?",
+    200: "At approximately 9,600 feet, Breckenridge is one of the highest towns in the U.S. It sits along this historic route connecting mountain mining towns, now a popular scenic byway.|What is the Summit County Historic District (or Colorado's Highway of Legends / Ten Mile Range area)?",
+    300: "Breckenridge Ski Resort is known for its five peaks of terrain. This peak, Peak 6, was the most recently opened major terrain addition, expanding the resort significantly in this decade.|What is the 2010s (Peak 6 opened in 2013)?",
+    400: "The town of Breckenridge was founded during this Colorado mineral rush in the late 1850s and 1860s, when prospectors flooded the Blue River Valley.|What is the Colorado Gold Rush (or silver mining boom)?",
+    500: "This annual winter festival held in Breckenridge every January features massive ice and snow sculptures carved by international artists, drawing visitors from around the world.|What is the Breckenridge International Snow Sculpture Championships?"
+  }
+};
+
+// Normalize to same format
+function parseClue(raw) {
+  if (typeof raw === 'object') return raw;
+  const [clue, answer] = raw.split('|');
+  return { clue, answer };
+}
+
+let score = 0;
+let answeredCount = 0;
+let currentClue = null;
+let usedCells = {};
+
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  // Category headers
+  CATEGORIES.forEach(cat => {
+    const header = document.createElement('div');
+    header.className = 'cat-header';
+    header.textContent = cat;
+    board.appendChild(header);
+  });
+
+  // Clue rows
+  VALUES.forEach(val => {
+    CATEGORIES.forEach(cat => {
+      const key = `${cat}-${val}`;
+      const cell = document.createElement('div');
+      cell.className = 'clue-cell' + (usedCells[key] ? ' used' : '');
+      cell.dataset.cat = cat;
+      cell.dataset.val = val;
+      cell.innerHTML = `<div class="dollar-amount">$${val}</div>`;
+      if (!usedCells[key]) {
+        cell.addEventListener('click', () => openClue(cat, val, cell));
+      }
+      board.appendChild(cell);
+    });
+  });
+}
+
+function openClue(cat, val, cell) {
+  const key = `${cat}-${val}`;
+  if (usedCells[key]) return;
+  const data = parseClue(CLUES[cat][val]);
+  currentClue = { cat, val, key, data };
+
+  document.getElementById('modal-category').textContent = cat;
+  document.getElementById('modal-value').textContent = `$${val}`;
+  document.getElementById('clue-text').textContent = data.clue;
+  document.getElementById('answer-reveal').classList.remove('shown');
+  document.getElementById('btn-correct').classList.remove('shown');
+  document.getElementById('btn-wrong').classList.remove('shown');
+  document.getElementById('btn-reveal').style.display = 'inline-block';
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function revealAnswer() {
+  const data = currentClue.data;
+  document.getElementById('answer-text').textContent = data.answer;
+  document.getElementById('answer-reveal').classList.add('shown');
+  document.getElementById('btn-correct').classList.add('shown');
+  document.getElementById('btn-wrong').classList.add('shown');
+  document.getElementById('btn-reveal').style.display = 'none';
+}
+
+function markResult(correct) {
+  const val = parseInt(currentClue.val);
+  if (correct) score += val;
+  else score -= val;
+  answeredCount++;
+  usedCells[currentClue.key] = true;
+
+  updateScoreboard();
+  closeModal();
+  buildBoard();
+
+  if (answeredCount === 25) {
+    setTimeout(showWinScreen, 400);
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('active');
+  currentClue = null;
+}
+
+function updateScoreboard() {
+  const sd = document.getElementById('score-display');
+  sd.textContent = (score < 0 ? '-$' : '$') + Math.abs(score).toLocaleString();
+  sd.className = 'score-value' + (score < 0 ? ' negative' : '');
+  document.getElementById('correct-display').textContent = answeredCount;
+  document.getElementById('remaining-display').textContent = 25 - answeredCount;
+}
+
+function showWinScreen() {
+  document.getElementById('final-score').textContent = (score < 0 ? '-$' : '$') + Math.abs(score).toLocaleString();
+  document.getElementById('win-overlay').classList.add('active');
+}
+
+function resetGame() {
+  score = 0;
+  answeredCount = 0;
+  usedCells = {};
+  currentClue = null;
+  document.getElementById('win-overlay').classList.remove('active');
+  updateScoreboard();
+  buildBoard();
+}
+
+// Close modal on overlay click
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Init
+buildBoard();
+</script>
+
+  <a href="index.html">← Back to Home</a>
+</body>
+</html>
